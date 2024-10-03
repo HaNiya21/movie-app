@@ -1,48 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; 
 import { Link } from 'react-router-dom';
-//import moviesData from '../data/moviesData';
-
 
 function MovieList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredMovies, setFilteredMovies] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
 
-const getMovies = async (searchTerm) => { 
-  const url = `http://www.omdbapi.com/?s=${searchTerm}&apikey=eed5bdb0`;
+  const getMovies = async (searchTerm) => { 
+    const url = `http://www.omdbapi.com/?s=${searchTerm}&apikey=eed5bdb0`;
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if(data.Search){
-      setFilteredMovies(data.Search);
-    }
-    else
-    {
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.Response === 'True') {
+        setFilteredMovies(data.Search);
+        setErrorMessage(''); // Clear any previous errors
+      } else {
+        setFilteredMovies([]);
+        setErrorMessage('Movie not found'); // Display 'Movie not found'
+      }
+    } catch (error) {
+      console.error('Error Loading Movies', error); 
       setFilteredMovies([]);
+      setErrorMessage('Error fetching movies. Please try again later.'); // Handle API errors
     }
-  } catch (error) {
-    console.error('Error Loading Movies',error); 
-    setFilteredMovies([]);
+  };
 
-}
-};
-
-useEffect(() => {
-  if(searchTerm){
-    getMovies(searchTerm)
-  }
-;}, [searchTerm]);
+  useEffect(() => {
+    if (searchTerm) {
+      getMovies(searchTerm);
+    }
+  }, [searchTerm]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
-
-  // const filterMovies = (term) => {
-  //   const filtered = moviesData.filter(movie =>
-  //     movie.title.toLowerCase().includes(term.toLowerCase())
-  //   );
-  //   setFilteredMovies(filtered);
-  // };
 
   return (
     <div className="movie-list">
@@ -53,6 +46,7 @@ useEffect(() => {
         value={searchTerm}
         onChange={handleSearchChange}
       />
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
       <ul>
         {filteredMovies.map(movie => (
           <li key={movie.imdbID}>
@@ -66,4 +60,4 @@ useEffect(() => {
   );
 }
 
-export default MovieList
+export default MovieList;
